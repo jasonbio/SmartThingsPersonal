@@ -18,18 +18,18 @@ definition(
 	name: "SmartPing",
 	namespace: "jasonbio/smartping",
 	author: "jasonbio",
-    description: "Monitor your website uptime and trigger SmartThings automations if it goes down.",
-    category: "SmartThings Labs",
+	description: "Monitor your website uptime and trigger SmartThings automations if it goes down.",
+	category: "SmartThings Labs",
 	iconUrl: "https://raw.githubusercontent.com/jasonbio/icons/master/smartping.png",
 	iconX2Url: "https://raw.githubusercontent.com/jasonbio/icons/master/smartping@2x.png",
 	iconX3Url: "https://raw.githubusercontent.com/jasonbio/icons/master/smartping@3x.png",
-    singleInstance: true
+	singleInstance: true
 )
 
 preferences {
 	page(name: "setup", title: "SmartPing", install: false, uninstall: true, submitOnChange: true) {
-    	section("") {
-            app(name: "SmartPing", appName: "SmartPing Automation", namespace: "jasonbio/smartping", title: "Add website", multiple: true)
+    		section("") {
+            		app(name: "SmartPing", appName: "SmartPing Automation", namespace: "jasonbio/smartping", title: "Add website", multiple: true)
 		}
 	}
 }
@@ -40,7 +40,7 @@ def installed() {
 
 def updated() {
 	unsubscribe()
-    initialize()
+	initialize()
 }
 
 def initialize() {
