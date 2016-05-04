@@ -15,19 +15,19 @@
  */
  
 definition(
-    name: "SmartPing Automation",
-    namespace: "jasonbio/smartping",
-    author: "jasonbio",
-    parent: "jasonbio/smartping:SmartPing",
-    description: "Monitor your website uptime and trigger SmartThings automations if it goes down.",
-    category: "SmartThings Labs",
+	name: "SmartPing Automation",
+	namespace: "jasonbio/smartping",
+	author: "jasonbio",
+	parent: "jasonbio/smartping:SmartPing",
+	description: "Monitor your website uptime and trigger SmartThings automations if it goes down.",
+	category: "SmartThings Labs",
 	iconUrl: "https://raw.githubusercontent.com/jasonbio/icons/master/smartping.png",
 	iconX2Url: "https://raw.githubusercontent.com/jasonbio/icons/master/smartping@2x.png",
 	iconX3Url: "https://raw.githubusercontent.com/jasonbio/icons/master/smartping@3x.png"
 )
 
 preferences {
-    page name: "mainPage", title: "", install: true, uninstall: true
+	page name: "mainPage", title: "", install: true, uninstall: true
 }
 
 def installed() {
@@ -41,166 +41,166 @@ def updated() {
 def initialize() {
 	if (validateURL()) {
 		state.downHost = "false"
-    	state.pollVerify = "false"
+		state.pollVerify = "false"
 		app.updateLabel("${state.website}")
-    	runIn(5, poll)
-    }
+		runIn(5, poll)
+    	}
 }
 
 def validateURL() {
 	state.website = website.toLowerCase()
-    if (state.website.contains(".com") || state.website.contains(".net") || state.website.contains(".org") || state.website.contains(".biz") || state.website.contains(".us") || state.website.contains(".info") || state.website.contains(".io") || state.website.contains(".ca") || state.website.contains(".co.uk") || state.website.contains(".tv") || state.website.contains(":")) {
-    	state.website = state.website.trim()
-    	if (state.website.startsWith("http://")) {
-    		state.website = state.website.replace("http://", "")
-        	state.website = state.website.replace("www.", "")
-    	}
-    	if (state.website.startsWith("https://")) {
-    		state.website = state.website.replace("https://", "")
-        	state.website = state.website.replace("www.", "")
-    	}
-    	if (state.website.startsWith("www.")) {
-    		state.website = state.website.replace("www.", "")
-    	}
-    	state.validURL = "true"
-    	return true
+    	if (state.website.contains(".com") || state.website.contains(".net") || state.website.contains(".org") || state.website.contains(".biz") || state.website.contains(".us") || state.website.contains(".info") || state.website.contains(".io") || state.website.contains(".ca") || state.website.contains(".co.uk") || state.website.contains(".tv") || state.website.contains(":")) {
+    		state.website = state.website.trim()
+    		if (state.website.startsWith("http://")) {
+    			state.website = state.website.replace("http://", "")
+        		state.website = state.website.replace("www.", "")
+    		}
+    		if (state.website.startsWith("https://")) {
+    			state.website = state.website.replace("https://", "")
+        		state.website = state.website.replace("www.", "")
+    		}
+    		if (state.website.startsWith("www.")) {
+    			state.website = state.website.replace("www.", "")
+    		}
+    		state.validURL = "true"
+    		return true
 	} else {
-    	state.validURL = "false"
-        return false
-    }
+    		state.validURL = "false"
+        	return false
+    	}
 }
 
 def mainPage() {
-    return dynamicPage(name: "mainPage", title: "") {
-    	section {
-        	paragraph "URL you want to monitor. ex: google.com"
-            input(name: "website", title:"URL", type: "text", required: true)
-            input(name: "threshold", title:"False Alarm Threshold (minutes)", type: "number", required: true, defaultValue:2)
-        }
-        section {
-        	paragraph "If the URL goes offline"
-            lightInputs()
-            lightActionInputs()
-            switchInputs()
-            switchActionInputs()
-            alarmInputs()
-            alarmActionInputs()
-        }
-    }
+	return dynamicPage(name: "mainPage", title: "") {
+    		section {
+        		paragraph "URL you want to monitor. ex: google.com"
+            		input(name: "website", title:"URL", type: "text", required: true)
+            		input(name: "threshold", title:"False Alarm Threshold (minutes)", type: "number", required: true, defaultValue:2)
+        	}
+        	section {
+        		paragraph "If the URL goes offline"
+            		lightInputs()
+            		lightActionInputs()
+            		switchInputs()
+            		switchActionInputs()
+            		alarmInputs()
+            		alarmActionInputs()
+        	}
+    	}
 }
 
 def poll() {
-    def reqParams = [
+	def reqParams = [
             uri: "http://${state.website}"
-    ]
-    if (state.validURL == "true") {
-    	try {
-        	httpGet(reqParams) { resp ->
-            	if (resp.status == 200) {
-                	if (state.downHost == "true") {
-            			turnOffHandler()
-                    	log.info "successful response from ${state.website}, turning off handlers"
-                	} else {
-                    	log.info "successful response from ${state.website}, no handlers"
-                	}
-            	} else {
-            		if (state.downHost == "false") {
-                		if (state.pollVerify == "false") {
-        					runIn(60*threshold, pollVerify)
+    	]
+    	if (state.validURL == "true") {
+    		try {
+        		httpGet(reqParams) { resp ->
+            			if (resp.status == 200) {
+                			if (state.downHost == "true") {
+            					turnOffHandler()
+                    				log.info "successful response from ${state.website}, turning off handlers"
+                			} else {
+                    				log.info "successful response from ${state.website}, no handlers"
+                			}
+            			} else {
+            				if (state.downHost == "false") {
+                				if (state.pollVerify == "false") {
+        						runIn(60*threshold, pollVerify)
+            						state.pollVerify = "true"
+            					}
+                				log.info "request failed to ${state.website}, calling pollVerify with a ${threshold} minute threshold"
+                			} else {
+                				log.info "pollVerify already called"
+                			}
+            			}
+        		}
+    		} catch (e) {
+        		if (state.downHost == "false") {
+        			if (state.pollVerify == "false") {
+        				runIn(60*threshold, pollVerify)
             				state.pollVerify = "true"
             			}
-                		log.info "request failed to ${state.website}, calling pollVerify with a ${threshold} minute threshold"
-                	} else {
-                		log.info "pollVerify already called"
-                	}
-            	}
-        	}
-    	} catch (e) {
-        	if (state.downHost == "false") {
-        		if (state.pollVerify == "false") {
-        			runIn(60*threshold, pollVerify)
-            		state.pollVerify = "true"
-            	}
-            	log.info "request failed to ${state.website}, calling pollVerify with a ${threshold} minute threshold"
-        	} else {
-           		log.info "pollVerify already called"
-        	}
+            			log.info "request failed to ${state.website}, calling pollVerify with a ${threshold} minute threshold"
+        		} else {
+           			log.info "pollVerify already called"
+        		}
+    		}
     	}
-    }
-    schedule("0 0/5 * * * ?", poll)
+    	schedule("0 0/5 * * * ?", poll)
 }
 
 def pollVerify() {
-    def reqParams = [
-            uri: "http://${state.website}"
-    ]
-    try {
-        httpGet(reqParams) { resp ->
-            if (resp.status == 200) {
-                state.downHost = "false"
-                state.pollVerify = "false"
-                turnOffHandler()
-                log.info "successful response from ${state.website}, false alarm avoided"
-            } else {
-            	state.downHost = "true"
-                state.pollVerify = "false"
-            	turnOnHandler()
-                log.info "request failed to ${state.website}, turning on handlers"
-            }
-        }
-    } catch (e) {
-        state.downHost = "true"
-        state.pollVerify = "false"
-        turnOnHandler()
-        log.info "request failed to ${state.website}, turning on handlers"
-    }
+	def reqParams = [
+		uri: "http://${state.website}"
+	]
+    	try {
+        	httpGet(reqParams) { resp ->
+            		if (resp.status == 200) {
+                		state.downHost = "false"
+                		state.pollVerify = "false"
+                		turnOffHandler()
+                		log.info "successful response from ${state.website}, false alarm avoided"
+            		} else {
+            			state.downHost = "true"
+                		state.pollVerify = "false"
+            			turnOnHandler()
+                		log.info "request failed to ${state.website}, turning on handlers"
+            		}
+        	}
+    	} catch (e) {
+        	state.downHost = "true"
+        	state.pollVerify = "false"
+        	turnOnHandler()
+        	log.info "request failed to ${state.website}, turning on handlers"
+    	}
 }
 
 def turnOnHandler() {
 	if (lights) {
-    	lights.each {
+    		lights.each {
 			if (it.hasCommand('setLevel')) {
 				it.setLevel(level as Integer)
 			} else {
 				it.on()
 			}
 		}
-    	lights?.on()
-        setColor()
-        setColorTemperature()
-    	log.info "turning on light(s)"
-    }
+    		lights?.on()
+        	setColor()
+        	setColorTemperature()
+    		log.info "turning on lights"
+    	}
 	if (switches) {
-    	switches.on()
-    	log.info "turning on switch(es)"
-    }
-    if (alarms) {
-    	alarms.each {
+    		switches.on()
+    		log.info "turning on switches"
+   	}
+	if (alarms) {
+    		alarms.each {
 			if (it.hasCommand('both')) {
 				it.both()
 			} else if (it.hasCommand('siren')) {
 				it.siren()
-            } else if (it.hasCommand('strobe')) {
-            	it.strobe()
+            		} else if (it.hasCommand('strobe')) {
+            			it.strobe()
 			}
 		}
-        log.info "turning on siren(s)"
-    }
+        	log.info "turning on siren(s)"
+    	}
 }
 
 def turnOffHandler() {
 	if (lights) {
-    	lights.off()
-    	log.info "turning on light(s)"
-    }
-    if (switches) {
-    	switches.off()
-    	log.info "turning off switch(es)"
-    }
-    if (alarms) {
-    	alarms.off()
-        log.info "turning off siren(s)"
-    }
+    		lights.off()
+    		log.info "turning on light(s)"
+    	}
+    	if (switches) {
+    		switches.off()
+    		log.info "turning off switch(es)"
+    	}
+    	if (alarms) {
+    		alarms.off()
+		log.info "turning off siren(s)"
+	}
 }
 
 private lightInputs() {
